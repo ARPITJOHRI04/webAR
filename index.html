@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebAR: Optimized Static 3D Object</title>
+
+    <!-- A-Frame + AR.js -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.3.2/aframe/build/aframe-ar.min.js"></script>
+
+    <!-- Styles -->
+    <style>
+      body { margin: 0; overflow: hidden; }
+      #buttons {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+      }
+      #buttons button {
+        padding: 10px 16px;
+        margin: 0 5px;
+        font-size: 14px;
+        border: none;
+        border-radius: 8px;
+        background-color: #444;
+        color: white;
+        cursor: pointer;
+      }
+      #buttons button:hover {
+        background-color: #222;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- UI Buttons to Switch Models -->
+    <div id="buttons">
+      <button onclick="changeModel('cesium')">Cesium Man</button>
+      <button onclick="changeModel('helmet')">Helmet</button>
+    </div>
+
+    <!-- AR Scene -->
+    <a-scene embedded arjs="sourceType: webcam;" loading-screen="enabled: true">
+      
+      <!-- Marker -->
+      <a-marker preset="hiro">
+        <a-entity id="model"
+                  visible="false"
+                  position="0 0 0"
+                  scale="1 1 1"
+                  animation="property: rotation; to: 0 360 0; loop: true; dur: 6000">
+        </a-entity>
+      </a-marker>
+
+      <!-- Camera -->
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <!-- Script -->
+    <script>
+      const model = document.querySelector('#model');
+      const marker = document.querySelector('a-marker');
+
+      // Optimized URLs: Small, fast-loading .glb models from CDN
+      const modelUrls = {
+        cesium: 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb',
+        helmet: 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb'
+      };
+
+      let currentUrl = modelUrls.cesium; // Default
+
+      // Function to switch models
+      function changeModel(type) {
+        const url = modelUrls[type];
+        if (url === currentUrl) return; // Avoid reloading same model
+
+        model.setAttribute('visible', false);
+        model.removeAttribute('gltf-model'); // Clean remove
+        setTimeout(() => {
+          model.setAttribute('gltf-model', url);
+          model.setAttribute('visible', true);
+          currentUrl = url;
+        }, 200); // Small delay ensures smooth replacement
+      }
+
+      // Show/hide model on marker detection
+      marker.addEventListener('markerFound', () => {
+        model.setAttribute('visible', true);
+      });
+      marker.addEventListener('markerLost', () => {
+        model.setAttribute('visible', false);
+      });
+
+      // Load default model on start
+      window.addEventListener('load', () => {
+        model.setAttribute('gltf-model', currentUrl);
+      });
+    </script>
+  </body>
+</html>
